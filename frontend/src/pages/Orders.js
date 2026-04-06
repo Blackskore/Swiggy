@@ -14,39 +14,39 @@ const bikeIcon = new L.Icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/2
 const REST_POS = [12.9716, 77.5946];
 const HOME_POS = [12.9352, 77.6245];
 
-function LiveMap({ status }) {
-    const [pos, setPos] = useState(REST_POS);
+function LiveMap({ status, homeCoords }) {
+    const restCoords = [homeCoords[0] + 0.02, homeCoords[1] - 0.02];
+    const [pos, setPos] = useState(restCoords);
     
     useEffect(() => {
         if (status === "PENDING") {
-            setPos(REST_POS);
+            setPos(restCoords);
         } else if (status === "DELIVERED") {
-            setPos(HOME_POS);
+            setPos(homeCoords);
         } else if (status === "PREPARING") {
-            // Animate bike driving from Rest to Home dynamically over 8 seconds!
             const startTime = Date.now();
             const duration = 8000;
             const animate = () => {
                 const elapsed = Date.now() - startTime;
                 if (elapsed >= duration) {
-                    setPos(HOME_POS);
+                    setPos(homeCoords);
                     return;
                 }
                 const progress = elapsed / duration;
-                const lat = REST_POS[0] + (HOME_POS[0] - REST_POS[0]) * progress;
-                const lng = REST_POS[1] + (HOME_POS[1] - REST_POS[1]) * progress;
+                const lat = restCoords[0] + (homeCoords[0] - restCoords[0]) * progress;
+                const lng = restCoords[1] + (homeCoords[1] - restCoords[1]) * progress;
                 setPos([lat, lng]);
                 requestAnimationFrame(animate);
             }
             requestAnimationFrame(animate);
         }
-    }, [status]);
+    }, [status, homeCoords]);
     
     return (
-        <MapContainer center={[(REST_POS[0]+HOME_POS[0])/2, (REST_POS[1]+HOME_POS[1])/2]} zoom={12} scrollWheelZoom={false}>
+        <MapContainer center={[(restCoords[0]+homeCoords[0])/2, (restCoords[1]+homeCoords[1])/2]} zoom={13} scrollWheelZoom={false}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap" />
-          <Marker position={REST_POS} icon={restIcon}></Marker>
-          <Marker position={HOME_POS} icon={homeIcon}><Popup>Destination</Popup></Marker>
+          <Marker position={restCoords} icon={restIcon}></Marker>
+          <Marker position={homeCoords} icon={homeIcon}><Popup>Delivery Address</Popup></Marker>
           <Marker position={pos} icon={bikeIcon}>
              <Popup>Your delivery partner!</Popup>
           </Marker>
@@ -54,17 +54,17 @@ function LiveMap({ status }) {
     );
 }
 
-function Orders() {
+function Orders({ isProfileEmbedded }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useContext(AuthContext);
+  const { user, coords } = useContext(AuthContext);
 
   useEffect(() => {
     if (!user) return;
     
     // Poll orders every 3 seconds for simulated automated real-time backend updates!
     const fetchOrders = () => {
-      axios.get("http://127.0.0.1:8000/orders/")
+      axios.get("/orders/")
         .then(res => {
           const sorted = res.data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
           setOrders(sorted);
@@ -96,8 +96,8 @@ function Orders() {
   if (loading) return <h2 style={{textAlign: "center", marginTop: 50}}>Loading Orders...</h2>;
 
   return (
-    <div className="orders-container">
-      <h2 style={{fontSize: "28px", marginBottom: "30px"}}>Past Orders & Live Tracking</h2>
+    <div className="orders-container" style={isProfileEmbedded ? {padding: 0} : {maxWidth: "800px", margin: "40px auto"}}>
+      {!isProfileEmbedded && <h2 style={{fontSize: "28px", marginBottom: "30px"}}>Past Orders & Live Tracking</h2>}
       
       {orders.length === 0 ? (
         <div className="empty-state">
@@ -132,9 +132,11 @@ function Orders() {
               </div>
               <p className="order-status-text" style={{marginTop:"30px"}}>Live Status: <strong style={{color: "#fc8019"}}>{order.status}</strong></p>
 
-              {/* Show incredible Live Animated Map for the most recent order only to avoid clutter */}
+              {/* Show incredible Live Animated Map dynamically tied to the context coords */}
               {idx === 0 && (
-                 <LiveMap status={order.status} />
+                 <div className="map-container-wrapper">
+                    <LiveMap status={order.status} homeCoords={coords} />
+                 </div>
               )}
             </div>
           ))}

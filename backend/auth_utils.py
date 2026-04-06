@@ -1,5 +1,5 @@
 import jwt
-from passlib.context import CryptContext
+import bcrypt
 from datetime import datetime, timedelta
 from fastapi import HTTPException, status, Depends
 from sqlalchemy.orm import Session
@@ -11,15 +11,13 @@ SECRET_KEY = "SUPER_SECRET_SWIGGY_KEY_PRODUCTION_SECURE"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week expiration
 
-# Bcrypt for rigorous password hashing matching bank/fintech grade
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def create_access_token(data: dict):
     to_encode = data.copy()

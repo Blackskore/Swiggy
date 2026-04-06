@@ -15,11 +15,13 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [currentLocation, setCurrentLocation] = useState("Bangalore, Karnataka, India");
+    const [coords, setCoords] = useState([12.9716, 77.5946]);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-            axios.get("http://127.0.0.1:8000/auth/me")
+            axios.get("/auth/me")
             .then(res => {
                 setUser(res.data);
                 setLoading(false);
@@ -44,7 +46,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, loading, currentLocation, setCurrentLocation, coords, setCoords }}>
             {!loading && children}
         </AuthContext.Provider>
     );

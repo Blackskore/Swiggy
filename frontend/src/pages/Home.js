@@ -1,13 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 
 function Home() {
   const [restaurants, setRestaurants] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const { currentLocation } = useContext(AuthContext);
+
+  const filteredRestaurants = restaurants.filter(r => 
+    r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (r.cuisines && r.cuisines.toLowerCase().includes(searchQuery.toLowerCase()))
+  ).map(r => ({
+     ...r,
+     description: `Central ${currentLocation.split(",")[0]}`  // Adapt to the user's chosen location!
+  }));
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/restaurants/")
+    axios.get("/restaurants/")
       .then(res => {
         setRestaurants(res.data);
         setLoading(false);
@@ -20,7 +31,57 @@ function Home() {
 
   return (
     <main className="main-container">
-      <h2 className="section-title">Restaurants with online food delivery in Bangalore</h2>
+      
+      {/* Immersive Search Bar placed boldly on the left side */}
+      <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "40px", marginTop: "10px"}}>
+        <div style={{
+           position: "relative",
+           width: "100%",
+           maxWidth: "600px",
+           transform: "translateY(0)",
+           transition: "transform 0.2s ease"
+        }} className="search-bar-wrapper">
+           <input 
+             type="text" 
+             placeholder="Search for restaurants and food..." 
+             value={searchQuery}
+             onChange={e => setSearchQuery(e.target.value)}
+             style={{
+                width: "100%", 
+                padding: "20px 24px", 
+                paddingRight: "60px",
+                borderRadius: "16px", 
+                border: "1px solid rgba(0,0,0,0.08)", 
+                outline: "none", 
+                fontSize: "18px", 
+                fontWeight: "500",
+                color: "#282c3f",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+                background: "white",
+                transition: "all 0.3s ease"
+             }}
+             onFocus={(e) => {
+                e.target.style.boxShadow = "0 12px 35px rgba(252, 128, 25, 0.15)";
+                e.target.style.borderColor = "rgba(252, 128, 25, 0.5)";
+             }}
+             onBlur={(e) => {
+                e.target.style.boxShadow = "0 10px 30px rgba(0,0,0,0.06)";
+                e.target.style.borderColor = "rgba(0,0,0,0.08)";
+             }}
+           />
+           <div style={{
+              position: "absolute",
+              right: "24px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "24px",
+              color: "#fc8019",
+              opacity: 0.8
+           }}>🔍</div>
+        </div>
+      </div>
+
+      <h2 className="section-title" style={{marginBottom: "30px", fontSize: "28px", letterSpacing: "-0.5px"}}>Restaurants with online food delivery near you</h2>
       
       {loading ? (
         <div className="loader-container">
@@ -28,7 +89,7 @@ function Home() {
         </div>
       ) : (
         <div className="restaurants-grid">
-          {restaurants.map(r => (
+          {filteredRestaurants.map(r => (
             <Link to={`/restaurant/${r.id}`} key={r.id} style={{textDecoration: 'none'}}>
               <div className="restaurant-card">
                 <div className="card-image-wrapper">
@@ -58,7 +119,7 @@ function Home() {
         </div>
       )}
       
-      {!loading && restaurants.length === 0 && (
+      {!loading && filteredRestaurants.length === 0 && (
         <div className="empty-state">
           <h2>No Restaurants yet!</h2>
         </div>

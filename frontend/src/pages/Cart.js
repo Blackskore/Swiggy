@@ -9,19 +9,38 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
   const [processing, setProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Credit Card Form State
+  // Payment Form States
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [name, setName] = useState("");
+  const [upiId, setUpiId] = useState("");
+
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+
+  const applyPromo = () => {
+    if (promoCode.toUpperCase() === "SWIGGY50") {
+      setDiscount(50);
+      alert("Awesome! Promo code SWIGGY50 applied. ₹50 off.");
+    } else {
+      setDiscount(0);
+      alert("Invalid promo code. Hint: Try SWIGGY50");
+    }
+  };
 
   const itemTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryFee = itemTotal > 0 ? 40 : 0;
   const taxesAndCharges = itemTotal > 0 ? Math.round(itemTotal * 0.05) : 0;
-  const grandTotal = itemTotal + deliveryFee + taxesAndCharges;
+  const grandTotal = Math.max(0, itemTotal + deliveryFee + taxesAndCharges - discount);
 
   // Validate form strictness
-  const isCardValid = cardNumber.length === 19 && expiry.length === 5 && cvv.length >= 3 && name.length >= 3;
+  const isPaymentValid = paymentMethod === "card" 
+    ? (cardNumber.length === 19 && expiry.length === 5 && cvv.length >= 3 && name.length >= 3)
+    : paymentMethod === "upi"
+    ? (upiId.length > 4 && upiId.includes("@"))
+    : true; // Phonepe always valid mock
 
   const handleCheckout = async () => {
     setProcessing(true);
@@ -35,7 +54,7 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
           restaurant_id: cart[0].restaurant_id,
           items: cart.map(i => ({ menu_item_id: i.id, quantity: i.quantity }))
         };
-        await axios.post("http://127.0.0.1:8000/orders/", payload);
+        await axios.post("/orders/", payload);
         
         setTimeout(() => {
           clearCart();
@@ -82,8 +101,8 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
           {!paymentSuccess ? (
             <div className="spinner-container">
               <div className="spinner"></div>
-              <h2>Authorizing Payment...</h2>
-              <p>Connecting securely to Visa/Mastercard. Do not refresh.</p>
+              <h2>{paymentMethod === 'phonepe' ? 'Redirecting to PhonePe...' : paymentMethod === 'upi' ? 'Awaiting UPI Approval...' : 'Authorizing Card Payment...'}</h2>
+              <p>Connecting securely. Do not refresh or press back.</p>
             </div>
           ) : (
             <div className="success-container">
@@ -102,46 +121,46 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
             </div>
             
             <div className="checkout-step box-shadow">
-              <h3 style={{display: "flex", gap: "10px", alignItems: "center"}}>💳 Secure Credit Card Payment</h3>
-              <p style={{color: "#7e808c", fontSize: "14px", marginBottom: "15px"}}>Enter your card details (Interactive test mode)</p>
-              
-              <div className="payment-form">
-                <input 
-                  className={`pay-input ${cardNumber.length > 0 && cardNumber.length < 19 ? 'error' : ''}`}
-                  placeholder="Card Number (16 digits)" 
-                  maxLength="19" 
-                  value={cardNumber} 
-                  onChange={e => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())} 
-                />
-                <div style={{display: "flex", gap: "15px"}}>
-                   <input 
-                     className="pay-input" 
-                     placeholder="MM/YY" 
-                     maxLength="5" 
-                     value={expiry} 
-                     onChange={e => {
-                       let val = e.target.value.replace(/\D/g, "");
-                       if(val.length >= 2) val = val.substring(0,2) + "/" + val.substring(2,4);
-                       setExpiry(val);
-                     }}
-                   />
-                   <input 
-                     className="pay-input" 
-                     placeholder="CVV" 
-                     type="password"
-                     maxLength="4" 
-                     value={cvv} 
-                     onChange={e => setCvv(e.target.value.replace(/\D/g, ''))}
-                   />
-                </div>
-                <input 
-                  className="pay-input" 
-                  placeholder="Name on Card" 
-                  maxLength="30" 
-                  value={name} 
-                  onChange={e => setName(e.target.value)}
-                />
-              </div>
+               <h3 style={{marginBottom: "20px"}}>Payment Method</h3>
+               <div style={{display: "flex", gap: "10px", marginBottom: "25px"}}>
+                 <button onClick={() => setPaymentMethod('card')} style={{flex: 1, padding: '10px', background: paymentMethod === 'card'? '#fc8019' : '#fff', color: paymentMethod === 'card' ? 'white' : '#282c3f', border: '1px solid #d4d5d9', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>Card</button>
+                 <button onClick={() => setPaymentMethod('upi')} style={{flex: 1, padding: '10px', background: paymentMethod === 'upi'? '#fc8019' : '#fff', color: paymentMethod === 'upi' ? 'white' : '#282c3f', border: '1px solid #d4d5d9', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>UPI</button>
+                 <button onClick={() => setPaymentMethod('phonepe')} style={{flex: 1, padding: '10px', background: paymentMethod === 'phonepe'? '#5f259f' : '#fff', color: paymentMethod === 'phonepe' ? 'white' : '#282c3f', border: '1px solid #d4d5d9', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>PhonePe</button>
+               </div>
+
+               {paymentMethod === "card" && (
+                 <div>
+                   <h3 style={{display: "flex", gap: "10px", alignItems: "center", marginBottom: "10px"}}>💳 Secure Credit Card</h3>
+                   <div className="payment-form">
+                     <input 
+                       className={`pay-input ${cardNumber.length > 0 && cardNumber.length < 19 ? 'error' : ''}`}
+                       placeholder="Card Number (mock)" 
+                       maxLength="19" 
+                       value={cardNumber} 
+                       onChange={e => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())} 
+                     />
+                     <div style={{display: "flex", gap: "15px"}}>
+                        <input className="pay-input" placeholder="MM/YY" maxLength="5" value={expiry} onChange={e => { let val = e.target.value.replace(/\D/g, ""); if(val.length >= 2) val = val.substring(0,2) + "/" + val.substring(2,4); setExpiry(val); }} />
+                        <input className="pay-input" placeholder="CVV" type="password" maxLength="4" value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g, ''))} />
+                     </div>
+                     <input className="pay-input" placeholder="Name on Card" maxLength="30" value={name} onChange={e => setName(e.target.value)} />
+                   </div>
+                 </div>
+               )}
+
+               {paymentMethod === "upi" && (
+                 <div>
+                   <h3 style={{display: "flex", gap: "10px", alignItems: "center", marginBottom: "10px"}}>📱 UPI Payment</h3>
+                   <input className="pay-input" placeholder="Enter UPI ID (e.g. user@ybl)" value={upiId} onChange={e => setUpiId(e.target.value)} />
+                 </div>
+               )}
+
+               {paymentMethod === "phonepe" && (
+                 <div style={{textAlign: "center", padding: "10px"}}>
+                   <h3 style={{color: "#5f259f", marginBottom: "10px"}}>PhonePe Testing</h3>
+                   <p style={{color: "#7e808c", fontSize: "14px"}}>Mock PhonePe gateway will be initiated upon payment.</p>
+                 </div>
+               )}
             </div>
           </div>
           
@@ -161,9 +180,16 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
                   </div>
                 ))}
               </div>
+
+              <div style={{display: "flex", gap: "10px", margin: "20px 0", borderTop: "1px dashed #d4d5d9", borderBottom: "1px dashed #d4d5d9", padding: "15px 0"}}>
+                 <input className="pay-input" style={{margin: 0, textTransform: "uppercase"}} placeholder="Enter Promo Code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
+                 <button onClick={applyPromo} style={{background: "#fc8019", color: "white", padding: "0 20px", border: "none", borderRadius: "4px", fontWeight: "bold", cursor: "pointer"}}>APPLY</button>
+              </div>
+
               <div className="bill-details">
                 <div className="bill-row"><span>Item Total</span><span>₹{itemTotal}</span></div>
                 <div className="bill-row"><span>Delivery Fee</span><span>₹{deliveryFee}</span></div>
+                {discount > 0 && <div className="bill-row" style={{color: "#4BB543", fontWeight: "bold"}}><span>Promo Discount</span><span>-₹{discount}</span></div>}
                 <div className="bill-row"><span>Taxes and Charges</span><span>₹{taxesAndCharges}</span></div>
                 <hr className="divider" style={{margin: "15px 0"}}/>
                 <div className="bill-row grand-total"><span>TO PAY</span><span>₹{grandTotal}</span></div>
@@ -172,13 +198,13 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
               <button 
                 className="pay-button" 
                 onClick={handleCheckout}
-                disabled={!isCardValid}
-                style={{ opacity: isCardValid ? 1 : 0.6 }}
+                disabled={!isPaymentValid}
+                style={{ opacity: isPaymentValid ? 1 : 0.6, background: paymentMethod === 'phonepe' ? '#5f259f' : '#fc8019' }}
               >
-                PAY ₹{grandTotal} 
+                {paymentMethod === 'phonepe' ? 'PAY WITH PHONEPE' : `PAY ₹${grandTotal}`}
               </button>
               
-              {!isCardValid && <p style={{color: "#e43b4f", fontSize: "12px", textAlign: "center", marginTop: "10px", fontWeight: "bold"}}>Complete the mock card details to proceed.</p>}
+              {!isPaymentValid && <p style={{color: "#e43b4f", fontSize: "12px", textAlign: "center", marginTop: "10px", fontWeight: "bold"}}>Please enter valid mock payment details.</p>}
             </div>
           </div>
         </div>
