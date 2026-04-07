@@ -1,97 +1,65 @@
-# 🍔 Swiggy Clone
+# Swiggy Clone — Premium Multi-City Food Delivery App
 
-A fully-functional, highly interactive, and premium food delivery web application inspired by Swiggy. This project features a robust **FastAPI backend** and a visually stunning **React frontend**.
+A high-performance Swiggy clone built with **React (Frontend)** and **FastAPI (Backend)**, featuring a premium glassmorphism/neomorphism design and a robust local-first database setup.
 
----
+## 🚀 Key Features
 
-## ✨ Key Features
+### 🌆 Multi-City Support (13 Major Indian Cities)
+- **Bengaluru, Mumbai, Delhi, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Kochi, Chandigarh, Lucknow, Goa**.
+- **Smart Location Modal**: A sleek, slide-in side panel with type-to-search city suggestions and GPS auto-detection.
+- **Thematic Branding**: The app's accent colors and emojis dynamically change based on the selected city (e.g., 🌊 Mumbai Blue, 🌸 Bengaluru Purple, 🏯 Delhi Red).
 
-### 🔐 Production-Grade Authentication
-- **Secure Backend**: Utilizes `PyJWT`, `passlib`, and `bcrypt` for industry-standard password hashing and JWT issuance.
-- **Frontend Context Engine**: A robust React Context (`AuthContext.js`) manages global sessions via `localStorage` and injects Bearer tokens seamlessly using Axios Interceptors explicitly on every request.
-- **Smart Route Protection**: Checkout, Cart, and Live Tracking features dynamically block unauthorized users and gracefully redirect them to the sleek Sign-In portal.
+### 🍕 Dynamic Restaurant & Menu System
+- **84+ Curated Restaurants**: Hand-picked popular outlets across all supported cities.
+- **Randomized Menu Generation**: Every restaurant features 3-5 thematic items (Biryanis, Burgers, South Indian, etc.) with high-quality images.
+- **Smart Search**: Filter by restaurant name, cuisine type, or specific area in real-time.
 
-### 🛒 Intelligent Cart & Checkout
-- **Advanced Cart Logic**: Built-in safeguards inherently prevent cross-restaurant ordering (mimicking real Swiggy rules) while tracking quantities seamlessly.
-- **Interactive Secure Payment UI**: A stunning payment simulation vault actively formats 16-digit card entries, checks Expiry (`MM/YY`), validates CVV lengths, and animates a premium loading authorization spinner.
+### 📦 Live Order Tracking
+- **Automated Lifecycle**: Orders automatically progress from `PLACED` → `PREPARING` → `DELIVERED`.
+- **Animated Map Tracking**: A live Leaflet-powered map showing a delivery partner moving from the restaurant to your destination in real-time.
+- **Crash-Resistant Design**: Robust coordinate handling ensure the map works perfectly even if GPS permissions are denied.
 
-### 🛵 Real-Time Live Map Tracking
-- **Automated FastAPI Background Workers**: Upon ordering, the backend cleanly launches a threaded background task that updates your order database status (`PENDING -> PREPARING -> DELIVERED`) physically over time to simulate real-world cooking and delivery workflows.
-- **Animated GPS Engine**: The frontend utilizes `react-leaflet` connected natively to OpenStreetMap to establish an awe-inspiring Live Tracking portal. The React layer intelligently interpolates the time-span triggers to actually animate a delivery bike driving across the map to your destination!
-
-### 🎨 Premium UI/UX Design System
-- Built heavily around rich aesthetics, gradients, Swiggy's core UI palette (`#fc8019`), hover scaling micro-animations, transparent card overlays, and conditional rendering to ensure a jaw-dropping look and feel.
-
----
-
-## 🛠️ Technology Stack
-
-- **Backend**: Python, FastAPI, SQLAlchemy (SQLite), Pydantic
-- **Frontend**: JavaScript, React.js, React-Router-Dom, Axios
-- **Mapping**: Leaflet, React-Leaflet
-- **Security**: JWT (JSON Web Tokens), Bcrypt
+### 💳 Interactive Cart & Checkout
+- **Mock Payment Gateway**: Support for Card, UPI, and PhonePe simulations with realistic processing delays and success animations.
+- **Promo Codes**: Apply `SWIGGY50` to get instant discounts on your order.
+- **Billed Accuracy**: The backend captures the exact final amount (including taxes, delivery fees, and discounts) for your order history.
 
 ---
 
-## 🚀 How to Run Locally
+## 🛠️ Tech Stack
 
-### 1. Start the Backend
-Open a terminal and install the required Python packages:
+- **Frontend**: React.js, React Router, Context API, Axios, Leaflet (Mapping).
+- **Backend**: FastAPI (Python), SQLAlchemy, Uvicorn, Jose (JWT).
+- **Database**: SQLite (Local fallback `swiggy_clone.db`).
+
+---
+
+## 🚦 Getting Started
+
+### 1. Backend Setup
 ```bash
 cd backend
-pip install fastapi "uvicorn[standard]" sqlalchemy pydantic email-validator pyjwt passlib bcrypt python-multipart requests
-```
-Boot the server:
-```bash
-uvicorn main:app --reload
-```
-
-### 2. Seed the Database (Optional but recommended)
-We wrote automated scripts to instantly populate your SQLite database with premium dummy data and beautiful Unsplash images.
-```bash
-# In the backend directory:
-python seed_menu.py
+python -m venv venv
+source venv/bin/activate  # Or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+python seed_cities.py     # Seeds the 84 restaurants and 300+ items
+python -m uvicorn main:app --port 8000 --reload
 ```
 
-### 3. Start the Frontend
-Open a second terminal window:
+### 2. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm start
 ```
-*Your application will automatically launch at `http://localhost:3000`.*
+
+### 🔑 Note on Google Maps
+The app is currently configured for **OpenStreetMap (Leaflet)** for order tracking (free, no key required). If you wish to re-enable the Google Maps nearby discovery feature, add your `REACT_APP_GOOGLE_MAPS_KEY` to `frontend/.env`.
 
 ---
 
-## 🏗️ Project Structure
-
-```
-├── backend/
-│   ├── main.py            # FastAPI entry point & CORS configuration
-│   ├── database.py        # SQLite SQLAlchemy engine 
-│   ├── models.py          # Database schema models
-│   ├── schemas.py         # Pydantic data validation classes
-│   ├── auth_utils.py      # Core logic for JWT Tokens and Bcrypt Hashing
-│   ├── seed_menu.py       # Data population script
-│   └── routes/
-│       ├── auth.py        # Signup / Login / Me endpoints
-│       ├── order.py       # Order creation & background tracking tasks
-│       └── restaurant.py  # Restaurant & Menu fetching endpoints
-│
-└── frontend/
-    ├── src/
-    │   ├── App.js         # React Router topology and Cart State
-    │   ├── index.js       # AuthProvider wrapper
-    │   ├── App.css        # Main stylesheet
-    │   ├── Checkout.css   # Interactive Maps and Payment styles
-    │   ├── context/
-    │   │   └── AuthContext.js # Global JWT authorization engine
-    │   └── pages/
-    │       ├── Home.js       # Main Restaurant Grid
-    │       ├── Restaurant.js # Specific Restaurant Menus
-    │       ├── Auth.js       # User Login & Signup forms
-    │       ├── Cart.js       # Bill Breakdown & Card Payment simulation
-    │       └── Orders.js     # Live Leaflet Map Tracking
-    └── package.json
-```
+## ✅ Recent Stabilization
+- Fixed `TypeError` in `animate` loop for tracking maps.
+- Resolved database column mismatch (added `city` and `area`).
+- Improved background task reliability for order status progression.
+- Optimized image loading with premium Unsplash thematic pools.

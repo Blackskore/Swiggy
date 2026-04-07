@@ -52,7 +52,8 @@ function Cart({ cart, addToCart, removeFromCart, clearCart }) {
       try {
         const payload = {
           restaurant_id: cart[0].restaurant_id,
-          items: cart.map(i => ({ menu_item_id: i.id, quantity: i.quantity }))
+          items: cart.map(i => ({ menu_item_id: i.id, quantity: i.quantity })),
+          total_amount: grandTotal
         };
         await axios.post("/orders/", payload);
         

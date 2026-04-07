@@ -13,23 +13,25 @@ router = APIRouter(
 
 # The magic background task that simulates physical cooking and delivery timeline updates!
 def update_order_status_task(order_id: int):
-    # Move to PREPARING after 8 seconds
-    time.sleep(8)
-    db = SessionLocal()
-    order = db.query(models.Order).filter(models.Order.id == order_id).first()
-    if order:
-        order.status = "PREPARING"
-        db.commit()
-    db.close()
-    
-    # Move to DELIVERED after another 8 seconds
-    time.sleep(8)
-    db = SessionLocal()
-    order = db.query(models.Order).filter(models.Order.id == order_id).first()
-    if order:
-        order.status = "DELIVERED"
-        db.commit()
-    db.close()
+    # Simulate delivery lifecycle
+    try:
+        # 1. PREPARING after 8s
+        time.sleep(8)
+        with SessionLocal() as db:
+            order = db.query(models.Order).filter(models.Order.id == order_id).first()
+            if order:
+                order.status = "PREPARING"
+                db.commit()
+        
+        # 2. DELIVERED after another 8s
+        time.sleep(8)
+        with SessionLocal() as db:
+            order = db.query(models.Order).filter(models.Order.id == order_id).first()
+            if order:
+                order.status = "DELIVERED"
+                db.commit()
+    except Exception as e:
+        print(f"Error in background task for order {order_id}: {e}")
 
 @router.post("/", response_model=schemas.Order, status_code=status.HTTP_201_CREATED)
 def create_order(
@@ -39,7 +41,6 @@ def create_order(
     current_user: models.User = Depends(get_current_user)  # Completely secure endpoint
 ):
     
-    total_amount = 0.0
     order_items_models = []
     
     for item in order.items:
@@ -47,7 +48,6 @@ def create_order(
         if not menu_item or menu_item.restaurant_id != order.restaurant_id:
             raise HTTPException(status_code=400, detail=f"Invalid menu item: {item.menu_item_id} for this restaurant")
         
-        total_amount += menu_item.price * item.quantity
         order_items_models.append(
             models.OrderItem(
                 menu_item_id=item.menu_item_id,
@@ -59,7 +59,7 @@ def create_order(
     new_order = models.Order(
         user_id=current_user.id,
         restaurant_id=order.restaurant_id,
-        total_amount=total_amount,
+        total_amount=order.total_amount,
         status="PENDING"
     )
     

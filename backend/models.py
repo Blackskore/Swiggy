@@ -27,6 +27,8 @@ class Restaurant(Base):
     delivery_time = Column(String, default="30-40 mins")
     cuisines = Column(String, default="North Indian, Chinese")
     price_for_two = Column(String, default="₹400 for two")
+    city = Column(String, default="Bengaluru", index=True)
+    area = Column(String, default="")
 
     menu_items = relationship("MenuItem", back_populates="restaurant")
 
@@ -45,6 +47,7 @@ class MenuItem(Base):
     is_veg = Column(Boolean, default=True)
 
     restaurant = relationship("Restaurant", back_populates="menu_items")
+    order_items = relationship("OrderItem", back_populates="menu_item")
 
 class Order(Base):
     __tablename__ = "orders"
@@ -58,6 +61,7 @@ class Order(Base):
 
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order")
+    restaurant = relationship("Restaurant")
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -69,3 +73,4 @@ class OrderItem(Base):
     price_at_time = Column(Float)
 
     order = relationship("Order", back_populates="items")
+    menu_item = relationship("MenuItem", back_populates="order_items")

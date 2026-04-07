@@ -10,9 +10,11 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schemas.Restaurant])
-def get_restaurants(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    restaurants = db.query(models.Restaurant).offset(skip).limit(limit).all()
-    return restaurants
+def get_restaurants(skip: int = 0, limit: int = 200, city: str = None, db: Session = Depends(get_db)):
+    q = db.query(models.Restaurant)
+    if city:
+        q = q.filter(models.Restaurant.city.ilike(f"%{city}%"))
+    return q.offset(skip).limit(limit).all()
 
 @router.get("/{restaurant_id}", response_model=schemas.Restaurant)
 def get_restaurant(restaurant_id: int, db: Session = Depends(get_db)):

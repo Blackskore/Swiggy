@@ -15,40 +15,62 @@ const REST_POS = [12.9716, 77.5946];
 const HOME_POS = [12.9352, 77.6245];
 
 function LiveMap({ status, homeCoords }) {
-    const restCoords = [homeCoords[0] + 0.02, homeCoords[1] - 0.02];
-    const [pos, setPos] = useState(restCoords);
+    // 🛡️ Comprehensive safety check for coordinates
+    const getSafeCoords = (coords) => {
+        if (Array.isArray(coords) && coords.length >= 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+            return coords;
+        }
+        return [12.9716, 77.5946]; // Default to Bangalore center
+    };
+
+    const targetPos = getSafeCoords(homeCoords);
+    const startPos = [targetPos[0] + 0.012, targetPos[1] - 0.012]; // Fixed offset from target
+    
+    const [pos, setPos] = useState(startPos);
     
     useEffect(() => {
+        let animationFrameId;
+
         if (status === "PENDING") {
-            setPos(restCoords);
+            setPos(startPos);
         } else if (status === "DELIVERED") {
-            setPos(homeCoords);
+            setPos(targetPos);
         } else if (status === "PREPARING") {
             const startTime = Date.now();
-            const duration = 8000;
+            const duration = 12000; // 12 seconds for smoother travel
+
             const animate = () => {
                 const elapsed = Date.now() - startTime;
-                if (elapsed >= duration) {
-                    setPos(homeCoords);
-                    return;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const currentLat = startPos[0] + (targetPos[0] - startPos[0]) * progress;
+                const currentLng = startPos[1] + (targetPos[1] - startPos[1]) * progress;
+                
+                setPos([currentLat, currentLng]);
+
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
                 }
-                const progress = elapsed / duration;
-                const lat = restCoords[0] + (homeCoords[0] - restCoords[0]) * progress;
-                const lng = restCoords[1] + (homeCoords[1] - restCoords[1]) * progress;
-                setPos([lat, lng]);
-                requestAnimationFrame(animate);
-            }
-            requestAnimationFrame(animate);
+            };
+            animationFrameId = requestAnimationFrame(animate);
         }
-    }, [status, homeCoords]);
+
+        return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        };
+    }, [status, targetPos[0], targetPos[1]]); // Rely on primitive values to avoid ref-trigger loops
     
     return (
-        <MapContainer center={[(restCoords[0]+homeCoords[0])/2, (restCoords[1]+homeCoords[1])/2]} zoom={13} scrollWheelZoom={false}>
+        <MapContainer 
+            center={[(startPos[0] + targetPos[0]) / 2, (startPos[1] + targetPos[1]) / 2]} 
+            zoom={15} 
+            scrollWheelZoom={false}
+        >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="© OpenStreetMap" />
-          <Marker position={restCoords} icon={restIcon}></Marker>
-          <Marker position={homeCoords} icon={homeIcon}><Popup>Delivery Address</Popup></Marker>
+          <Marker position={startPos} icon={restIcon}></Marker>
+          <Marker position={targetPos} icon={homeIcon}><Popup>Delivery Destination</Popup></Marker>
           <Marker position={pos} icon={bikeIcon}>
-             <Popup>Your delivery partner!</Popup>
+             <Popup>Delivery Partner is on the way!</Popup>
           </Marker>
         </MapContainer>
     );
@@ -110,13 +132,23 @@ function Orders({ isProfileEmbedded }) {
             <div key={order.id} className="order-card box-shadow">
               <div className="order-header">
                 <div>
-                   <h3 className="order-restaurant">Swiggy Order #{order.id}</h3>
+                   <h3 className="order-restaurant">{order.restaurant ? order.restaurant.name : `Swiggy Order #${order.id}`}</h3>
+                   <div style={{fontSize: "12px", color: "#686b78", fontWeight: "bold", marginTop: 4}}>{order.restaurant ? order.restaurant.area : "Online Order"}</div>
                    <span className="order-date">{new Date(order.created_at).toLocaleString()}</span>
                 </div>
                 <div className="order-total">
-                   <span style={{fontSize: "13px", color: "#7e808c", display: "block"}}>Paid using Card</span>
-                   ₹{order.total_amount}
+                   <span style={{fontSize: "13px", color: "#7e808c", display: "block", textAlign: "right"}}>Transaction Success</span>
+                   <span style={{fontSize: "18px", fontWeight: 800, color: "#282c3f"}}>₹{order.total_amount}</span>
                 </div>
+              </div>
+
+              {/* Added Real Items Summary */}
+              <div style={{padding: "15px 0", borderTop: "1px solid #f2f2f2"}}>
+                 {order.items && order.items.map(i => (
+                    <div key={i.id} style={{fontSize: "13px", color: "#3d4152", marginBottom: 5}}>
+                       {i.menu_item ? `${i.menu_item.name} x ${i.quantity}` : `Item x ${i.quantity}`}
+                    </div>
+                 ))}
               </div>
               
               {/* Order Tracking Progress Bar Visualizer */}

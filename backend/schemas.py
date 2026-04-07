@@ -49,6 +49,8 @@ class RestaurantBase(BaseModel):
     delivery_time: Optional[str] = "30-40 mins"
     cuisines: Optional[str] = "North Indian, Chinese"
     price_for_two: Optional[str] = "₹400 for two"
+    city: Optional[str] = "Bengaluru"
+    area: Optional[str] = ""
 
 class RestaurantCreate(RestaurantBase):
     pass
@@ -68,11 +70,16 @@ class OrderItemBase(BaseModel):
 class OrderCreate(BaseModel):
     restaurant_id: int
     items: List[OrderItemBase]
+    total_amount: float
+
+    class Config:
+        from_attributes = True
 
 class OrderItem(OrderItemBase):
     id: int
     order_id: int
     price_at_time: float
+    menu_item: Optional[MenuItem] = None
 
     class Config:
         from_attributes = True
@@ -87,6 +94,7 @@ class Order(OrderBase):
     user_id: int
     restaurant_id: int
     items: List[OrderItem] = []
+    restaurant: Optional[Restaurant] = None
 
     class Config:
         from_attributes = True
