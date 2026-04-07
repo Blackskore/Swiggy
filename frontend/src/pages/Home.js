@@ -32,52 +32,84 @@ function Home() {
   return (
     <main className="main-container">
       
-      {/* Immersive Search Bar placed boldly on the left side */}
-      <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start", marginBottom: "40px", marginTop: "10px"}}>
+      {/* Modern, Central, Immersive Search Bar */}
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "50px", marginTop: "20px"}}>
         <div style={{
            position: "relative",
            width: "100%",
-           maxWidth: "600px",
+           maxWidth: "700px",
            transform: "translateY(0)",
-           transition: "transform 0.2s ease"
-        }} className="search-bar-wrapper">
+           transition: "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"
+        }} 
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; }}
+        className="search-bar-wrapper">
+           <div style={{
+              position: "absolute",
+              inset: "-2px",
+              background: "linear-gradient(90deg, #fc8019, #ffb347, #fc8019)",
+              borderRadius: "24px",
+              filter: "blur(10px)",
+              opacity: "0.3",
+              zIndex: -1,
+              transition: "opacity 0.3s ease"
+           }} className="search-glow"></div>
            <input 
              type="text" 
-             placeholder="Search for restaurants and food..." 
+             placeholder="Search for restaurants, cuisines, or dishes..." 
              value={searchQuery}
              onChange={e => setSearchQuery(e.target.value)}
              style={{
                 width: "100%", 
-                padding: "20px 24px", 
-                paddingRight: "60px",
-                borderRadius: "16px", 
-                border: "1px solid rgba(0,0,0,0.08)", 
+                padding: "20px 30px", 
+                paddingRight: "70px",
+                borderRadius: "20px", 
+                border: "1px solid rgba(255,255,255,0.8)", 
                 outline: "none", 
                 fontSize: "18px", 
                 fontWeight: "500",
                 color: "#282c3f",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-                background: "white",
-                transition: "all 0.3s ease"
+                boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(10px)",
+                transition: "all 0.3s ease",
+                fontFamily: "'Inter', sans-serif"
              }}
              onFocus={(e) => {
-                e.target.style.boxShadow = "0 12px 35px rgba(252, 128, 25, 0.15)";
-                e.target.style.borderColor = "rgba(252, 128, 25, 0.5)";
+                e.target.style.boxShadow = "0 15px 50px rgba(252, 128, 25, 0.2)";
+                e.target.style.borderColor = "rgba(252, 128, 25, 0.6)";
+                e.target.style.background = "#ffffff";
              }}
              onBlur={(e) => {
-                e.target.style.boxShadow = "0 10px 30px rgba(0,0,0,0.06)";
-                e.target.style.borderColor = "rgba(0,0,0,0.08)";
+                e.target.style.boxShadow = "0 10px 40px rgba(0,0,0,0.08)";
+                e.target.style.borderColor = "rgba(255,255,255,0.8)";
+                e.target.style.background = "rgba(255, 255, 255, 0.9)";
              }}
            />
            <div style={{
               position: "absolute",
-              right: "24px",
+              right: "12px",
               top: "50%",
               transform: "translateY(-50%)",
-              fontSize: "24px",
-              color: "#fc8019",
-              opacity: 0.8
-           }}>🔍</div>
+              width: "48px",
+              height: "48px",
+              background: "linear-gradient(135deg, #fc8019, #f76b1c)",
+              borderRadius: "14px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 15px rgba(252, 128, 25, 0.4)",
+              cursor: "pointer",
+              transition: "transform 0.2s ease"
+           }}
+           onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'; }}
+           onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; }}
+           >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.9999 21L16.6499 16.65" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+           </div>
         </div>
       </div>
 
