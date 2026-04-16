@@ -7,7 +7,9 @@ Backend must be running on http://127.0.0.1:8000
 import requests
 import random
 
-API_URL = "http://127.0.0.1:8000"
+import os
+
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
 
 IMAGES = {
     "biryani":   "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?q=80&w=600&auto=format&fit=crop",

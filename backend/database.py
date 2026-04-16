@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # AWS RDS Configuration
-RDS_ENDPOINT = "data123.ce7coqi0io3r.us-east-1.rds.amazonaws.com"
+RDS_ENDPOINT = os.environ.get("RDS_ENDPOINT", "data123.ce7coqi0io3r.us-east-1.rds.amazonaws.com")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "password")
 DB_NAME = os.environ.get("DB_NAME", "swiggy_clone")

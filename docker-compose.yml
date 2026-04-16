@@ -1,20 +1,13 @@
 version: '3.8'
 
 services:
-  backend:
+  swiggy-app:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
+    image: swiggy-unified-app:latest
     ports:
       - "8000:8000"
     environment:
       - ENV=production
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
     restart: unless-stopped

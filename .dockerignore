@@ -1,0 +1,11 @@
+**/node_modules
+**/build
+**/__pycache__
+**/*.pyc
+**/venv
+.git
+.gitignore
+.dockerignore
+README.md
+backend/static
+swiggy_clone.db

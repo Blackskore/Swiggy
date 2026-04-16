@@ -42,3 +42,26 @@ def create_menu_item(restaurant_id: int, item: schemas.MenuItemCreate, db: Sessi
     db.commit()
     db.refresh(new_item)
     return new_item
+
+@router.delete("/{restaurant_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    
+    # Also delete associated menu items to maintain integrity
+    db.query(models.MenuItem).filter(models.MenuItem.restaurant_id == restaurant_id).delete()
+    db.delete(restaurant)
+    db.commit()
+    return None
+
+@router.patch("/{restaurant_id}/toggle", response_model=schemas.Restaurant)
+def toggle_restaurant_status(restaurant_id: int, db: Session = Depends(get_db)):
+    restaurant = db.query(models.Restaurant).filter(models.Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    
+    restaurant.is_active = not restaurant.is_active
+    db.commit()
+    db.refresh(restaurant)
+    return restaurant
